@@ -14,12 +14,12 @@ End-to-end data analysis of ~100k orders from Olist, a Brazilian online marketpl
 
 | | Finding |
 |---|---|
-| 🚚 | **Late delivery is the #1 driver of bad reviews.** Late orders are 6.8% of deliveries but 33% of all 1–2★ reviews. At 8+ days late, 79% of customers leave a negative review (avg 1.7★ vs 4.3★ on time). |
-| 📈 | **Revenue grew +138% year over year** (Jan–Aug 2018 vs 2017) to ~R$1M per month, but **logistics broke at demand peaks**: the late rate hit 12% on Black Friday 2017 and 19% in March 2018 (normal: 3–5%). |
-| 🗺️ | **The North-East and Rio de Janeiro are underserved.** Alagoas and Maranhão wait 21–25 days and pay freight worth 20–26% of the item price. RJ has ~1,500 late orders, almost as many as São Paulo with a third of the volume. |
-| 💳 | **Installments go with bigger baskets.** Credit card is 75% of orders; orders split into 7+ installments average R$335, 3.3× orders paid in full. |
-| 🔁 | **Only 3% of customers buy again**, so growth depends almost entirely on new customers. |
-| 🤖 | **A simple risk model (ROC AUC 0.74)** flags the 10% riskiest delivered orders, which contain 40% of all negative reviews, so customer service can contact them first. |
+| 1 | **Late delivery is the #1 driver of bad reviews.** Late orders are 6.8% of deliveries but 33% of all 1–2★ reviews. At 8+ days late, 79% of customers leave a negative review (avg 1.7★ vs 4.3★ on time). |
+| 2 | **Revenue grew +138% year over year** (Jan–Aug 2018 vs 2017) to ~R$1M per month, but **logistics broke at demand peaks**: the late rate hit 12% on Black Friday 2017 and 19% in March 2018 (normal: 3–5%). |
+| 3 | **The North-East and Rio de Janeiro are underserved.** Alagoas and Maranhão wait 21–25 days and pay freight worth 20–26% of the item price. RJ has ~1,500 late orders, almost as many as São Paulo with a third of the volume. |
+| 4 | **Installments go with bigger baskets.** Credit card is 75% of orders; orders split into 7+ installments average R$335, 3.3× orders paid in full. |
+| 5 | **Only 3% of customers buy again**, so growth depends almost entirely on new customers. |
+| 6 | **A simple risk model (ROC AUC 0.74)** flags the 10% riskiest delivered orders, which contain 40% of all negative reviews, so customer service can contact them first. |
 
 Full analysis with charts and recommendations: [`notebooks/olist_analysis.ipynb`](notebooks/olist_analysis.ipynb)
 
