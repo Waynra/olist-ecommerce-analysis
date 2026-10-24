@@ -6,7 +6,9 @@ End-to-end data analysis of ~100k orders from Olist, a Brazilian online marketpl
 
 **Author:** Wahyu Nur Agustusanto · [wahyunur.runs-on.dev](https://wahyunur.runs-on.dev/) · [GitHub](https://github.com/Waynra)
 
-![Dashboard preview](reports/figures/dashboard.png)
+**🔗 Live dashboard: [waynra.github.io/olist-ecommerce-analysis/dashboard](https://waynra.github.io/olist-ecommerce-analysis/dashboard/)**
+
+[![Dashboard preview](reports/figures/dashboard.png)](https://waynra.github.io/olist-ecommerce-analysis/dashboard/)
 
 ## Key findings
 
@@ -107,6 +109,8 @@ olist-ecommerce-analysis/
 Requires Python 3.10+.
 
 ```bash
+git clone https://github.com/Waynra/olist-ecommerce-analysis.git
+cd olist-ecommerce-analysis
 python -m venv .venv
 .venv\Scripts\activate          # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
