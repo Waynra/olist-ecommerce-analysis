@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Olist E-Commerce Dashboard</title>
+<meta name="description" content="Interactive dashboard of sales, delivery performance and customer satisfaction on the Olist marketplace (Jan 2017 - Aug 2018).">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --surface-raised: #ffffff;
+    --text-1: #0b0b0b;
+    --text-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --series-1: #2a78d6;
+    --context: #c9c8c1;
+    --focus: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --surface-raised: #232322;
+      --text-1: #f0efec;
+      --text-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --series-1: #3987e5;
+      --context: #4d4c48;
+      --focus: #3987e5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-raised: #232322;
+    --text-1: #f0efec;
+    --text-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --series-1: #3987e5;
+    --context: #4d4c48;
+    --focus: #3987e5;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--page);
+    color: var(--text-1);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 40px; }
+
+  header h1 { font-size: 24px; line-height: 1.25; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--text-2); }
+  header .byline { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  .filters {
+    display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px;
+    margin: 22px 0 16px;
+  }
+  .filters label { display: grid; gap: 4px; font-size: 12px; color: var(--text-2); font-weight: 600; }
+  select, button {
+    font: inherit; color: var(--text-1); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px;
+  }
+  select { padding: 7px 30px 7px 10px; min-width: 200px; }
+  button { padding: 7px 12px; cursor: pointer; }
+  button:hover, select:hover { border-color: var(--axis); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .filters .reset { color: var(--text-2); }
+
+  .tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .tile .label { font-size: 13px; color: var(--text-2); }
+  .tile .value { font-size: 26px; font-weight: 600; line-height: 1.2; margin-top: 4px; }
+  .tile .note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .findings {
+    margin: 12px 0 0; padding: 14px 18px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  }
+  .findings h2 { font-size: 14px; margin: 0 0 6px; }
+  .findings ul { margin: 0; padding-left: 18px; color: var(--text-2); }
+  .findings li { margin: 2px 0; }
+  .findings strong { color: var(--text-1); font-weight: 600; }
+
+  .grid {
+    display: grid; gap: 12px; margin-top: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "rev   late"
+      "delay state"
+      "cat   state"
+      "pay   about";
+    align-items: start;
+  }
+  .card {
+    margin: 0; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 16px 12px; min-width: 0;
+    transition: opacity .15s;
+  }
+  .card-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+  .card h2 { font-size: 15px; margin: 0; line-height: 1.35; }
+  .card .sub { margin: 2px 0 10px; color: var(--text-2); font-size: 13px; }
+  .table-toggle { font-size: 12px; padding: 3px 9px; color: var(--text-2); white-space: nowrap; }
+  .table-toggle[aria-pressed="true"] { color: var(--text-1); border-color: var(--axis); }
+  .chart-box { position: relative; }
+  .table-box { max-height: 340px; overflow: auto; }
+  .empty { color: var(--muted); font-size: 13px; padding: 40px 0; text-align: center; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 5px 8px; border-bottom: 1px solid var(--grid); text-align: right; font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-2); font-weight: 600; position: sticky; top: 0; background: var(--surface); }
+
+  .about p { margin: 0 0 8px; color: var(--text-2); font-size: 13px; }
+  .about code { font-size: 12px; }
+  footer { margin-top: 18px; color: var(--muted); font-size: 12px; }
+  a { color: var(--series-1); }
+
+  @media (max-width: 960px) {
+    .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .wrap { padding: 20px 16px 32px; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "rev" "late" "delay" "state" "cat" "pay" "about"; }
+    select { min-width: 0; width: 100%; }
+    .filters label { flex: 1 1 100%; }
+    .tile .value { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Olist E-Commerce: Sales, Delivery &amp; Customer Satisfaction</h1>
+    <p>Brazilian online marketplace, Jan 2017 &ndash; Aug 2018 &middot; ~98k orders</p>
+    <p class="byline">Analysis &amp; dashboard by Wahyu Nur Agustusanto &middot; SQL (SQLite) + Python (pandas) + Chart.js</p>
+  </header>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <label>Period
+      <select id="f-period">
+        <option value="all">Jan 2017 &ndash; Aug 2018</option>
+        <option value="2017">2017 (full year)</option>
+        <option value="2018">2018 (Jan &ndash; Aug)</option>
+      </select>
+    </label>
+    <label>Customer state
+      <select id="f-state"><option value="ALL">All states</option></select>
+    </label>
+    <button type="button" class="reset" id="f-reset">Reset</button>
+  </div>
+
+  <section class="tiles" aria-label="Key figures">
+    <div class="tile"><div class="label">Revenue</div><div class="value" id="k-revenue">&ndash;</div><div class="note">item price, excl. freight</div></div>
+    <div class="tile"><div class="label">Orders</div><div class="value" id="k-orders">&ndash;</div><div class="note">excl. canceled</div></div>
+    <div class="tile"><div class="label">Average order value</div><div class="value" id="k-aov">&ndash;</div><div class="note">revenue / orders</div></div>
+    <div class="tile"><div class="label">Late deliveries</div><div class="value" id="k-late">&ndash;</div><div class="note" id="k-days">of delivered orders</div></div>
+    <div class="tile"><div class="label">Average review</div><div class="value" id="k-review">&ndash;</div><div class="note">out of 5 stars</div></div>
+  </section>
+
+  <section class="findings" aria-label="Key findings">
+    <h2>What the data says (all states, full period)</h2>
+    <ul>
+      <li><strong>Late delivery drives bad reviews.</strong> Late orders are 6.8% of deliveries but 33% of 1&ndash;2&#9733; reviews; at 8+ days late, 79% of customers leave a negative review.</li>
+      <li><strong>Logistics break at demand peaks.</strong> The late rate jumped to 12% on Black Friday 2017 and 19% in March 2018, against 3&ndash;5% in a normal month.</li>
+      <li><strong>The North-East and Rio are underserved.</strong> Alagoas and Maranh&atilde;o wait 21&ndash;25 days; RJ has ~1,500 late orders, almost as many as SP with a third of the volume.</li>
+    </ul>
+  </section>
+
+  <div class="grid">
+    <figure class="card" style="grid-area: rev" data-chart="revenue">
+      <div class="card-head"><h2>Monthly revenue</h2><button type="button" class="table-toggle" aria-pressed="false">Table</button></div>
+      <p class="sub">Item revenue per month (R$)</p>
+      <div class="chart-box" style="height: 240px"><canvas role="img" aria-label="Line chart of monthly revenue"></canvas></div>
+      <div class="table-box" hidden></div>
+    </figure>
+
+    <figure class="card" style="grid-area: late" data-chart="late">
+      <div class="card-head"><h2>Late deliveries by month</h2><button type="button" class="table-toggle" aria-pressed="false">Table</button></div>
+      <p class="sub">% of delivered orders that arrived after the promised date</p>
+      <div class="chart-box" style="height: 240px"><canvas role="img" aria-label="Line chart of monthly late-delivery rate"></canvas></div>
+      <div class="table-box" hidden></div>
+    </figure>
+
+    <figure class="card" style="grid-area: delay" data-chart="delay">
+      <div class="card-head"><h2>Negative reviews by delivery delay</h2><button type="button" class="table-toggle" aria-pressed="false">Table</button></div>
+      <p class="sub">% of orders rated 1&ndash;2&#9733;; late buckets highlighted</p>
+      <div class="chart-box" style="height: 250px"><canvas role="img" aria-label="Column chart of negative review share by delivery delay"></canvas></div>
+      <div class="table-box" hidden></div>
+    </figure>
+
+    <figure class="card" style="grid-area: state" data-chart="state">
+      <div class="card-head"><h2>Late deliveries by state</h2><button type="button" class="table-toggle" aria-pressed="false">Table</button></div>
+      <p class="sub" id="state-sub">States with 100+ delivered orders</p>
+      <div class="chart-box" style="height: 620px"><canvas role="img" aria-label="Bar chart of late-delivery rate by customer state"></canvas></div>
+      <div class="table-box" hidden></div>
+    </figure>
+
+    <figure class="card" style="grid-area: cat" data-chart="categories">
+      <div class="card-head"><h2>Top 10 categories by revenue</h2><button type="button" class="table-toggle" aria-pressed="false">Table</button></div>
+      <p class="sub">Item revenue (R$)</p>
+      <div class="chart-box" style="height: 300px"><canvas role="img" aria-label="Bar chart of the top 10 product categories by revenue"></canvas></div>
+      <div class="table-box" hidden></div>
+    </figure>
+
+    <figure class="card" style="grid-area: pay" data-chart="payments">
+      <div class="card-head"><h2>Payment methods</h2><button type="button" class="table-toggle" aria-pressed="false">Table</button></div>
+      <p class="sub">% of orders by main payment method</p>
+      <div class="chart-box" style="height: 200px"><canvas role="img" aria-label="Bar chart of orders by payment method"></canvas></div>
+      <div class="table-box" hidden></div>
+    </figure>
+
+    <section class="card about" style="grid-area: about" aria-label="About this data">
+      <div class="card-head"><h2>About this data</h2></div>
+      <p class="sub">How the numbers are built</p>
+      <p>Source: the <a href="https://github.com/olist/work-at-olist-data" rel="noopener">Olist public dataset</a> (MIT license), 8 related tables.</p>
+      <p>Raw CSVs are cleaned with pandas and loaded into SQLite; fact tables and every metric are defined in SQL. Months before Jan 2017 and after Aug 2018 are excluded (fewer than 1,000 orders each).</p>
+      <p><b>Late</b> = delivered after the estimated delivery date. <b>Revenue</b> = item price of orders not canceled or unavailable.</p>
+    </section>
+  </div>
+
+  <footer>Data generated <span id="generated"></span>. Numbers match <code>sql/analysis.sql</code> in the project repository.</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="data.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const STATE_NAMES = {
+    AC: "Acre", AL: "Alagoas", AM: "Amazonas", AP: "Amapá", BA: "Bahia", CE: "Ceará",
+    DF: "Distrito Federal", ES: "Espírito Santo", GO: "Goiás", MA: "Maranhão", MG: "Minas Gerais",
+    MS: "Mato Grosso do Sul", MT: "Mato Grosso", PA: "Pará", PB: "Paraíba", PE: "Pernambuco",
+    PI: "Piauí", PR: "Paraná", RJ: "Rio de Janeiro", RN: "Rio Grande do Norte", RO: "Rondônia",
+    RR: "Roraima", RS: "Rio Grande do Sul", SC: "Santa Catarina", SE: "Sergipe", SP: "São Paulo",
+    TO: "Tocantins",
+  };
+  const PAYMENT_NAMES = { credit_card: "Credit card", boleto: "Boleto (bank slip)", voucher: "Voucher", debit_card: "Debit card" };
+  const DELAY_BUCKETS = ["7+ days early", "0-6 days early", "1-3 days late", "4-7 days late", "8+ days late"];
+  const MIN_STATE_ORDERS = 100;
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  // ---------- data ----------
+  const RAW = window.DASHBOARD_DATA;
+  const toObjects = (t) => t.rows.map((r) => Object.fromEntries(t.columns.map((c, i) => [c, r[i]])));
+  const DATA = {
+    monthly: toObjects(RAW.monthly),
+    categories: toObjects(RAW.categories),
+    delay: toObjects(RAW.delay_reviews),
+    payments: toObjects(RAW.payments),
+  };
+
+  const filters = { period: "all", state: "ALL" };
+  const inPeriod = (r) => filters.period === "all" || (r.year || r.month.slice(0, 4)) === filters.period;
+  const inState = (r) => filters.state === "ALL" || r.state === filters.state;
+  const sumBy = (rows, key, fields) => {
+    const out = new Map();
+    for (const r of rows) {
+      const k = r[key];
+      const acc = out.get(k) || Object.fromEntries(fields.map((f) => [f, 0]));
+      for (const f of fields) acc[f] += r[f];
+      out.set(k, acc);
+    }
+    return out;
+  };
+
+  // ---------- formatting ----------
+  const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+  const int = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+  const brl = (v) => (v >= 1e4 ? "R$" + compact.format(v) : "R$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  const pct = (v, d = 1) => (Number.isFinite(v) ? v.toFixed(d) + "%" : "–");
+  const monthLabel = (m) => MONTHS[+m.slice(5, 7) - 1] + " " + m.slice(2, 4);
+  const niceCategory = (c) => { const s = c.replace(/_/g, " "); return s.charAt(0).toUpperCase() + s.slice(1); };
+
+  // ---------- theme tokens ----------
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const tokens = () => ({
+    surface: css("--surface-raised"), text1: css("--text-1"), text2: css("--text-2"), muted: css("--muted"),
+    grid: css("--grid"), axis: css("--axis"), border: css("--border"), blue: css("--series-1"), context: css("--context"),
+  });
+
+  // Vertical hairline that follows the hovered month on line charts
+  const crosshair = {
+    id: "crosshair",
+    afterDatasetsDraw(chart) {
+      if (chart.config.type !== "line") return;
+      const active = chart.tooltip && chart.tooltip.getActiveElements();
+      if (!active || !active.length) return;
+      const { ctx, chartArea } = chart, x = active[0].element.x;
+      ctx.save();
+      ctx.strokeStyle = tokens().axis;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, chartArea.top); ctx.lineTo(x, chartArea.bottom); ctx.stroke();
+      ctx.restore();
+    },
+  };
+
+  function baseOptions(t, { horizontal = false, yFormat, xFormat, tooltipLabel, tooltipAfter, skipLabels = false } = {}) {
+    const valueAxis = horizontal ? "x" : "y";
+    const scale = (fmt, isValue) => {
+      const ticks = { color: t.muted, padding: 6, font: { size: 11 }, autoSkipPadding: 14, maxRotation: 0 };
+      // Only override the label callback for value axes; the category axis keeps Chart.js's index -> label mapping
+      if (fmt) ticks.callback = (v) => fmt(v);
+      if (!isValue) ticks.autoSkip = skipLabels;
+      return {
+        grid: { color: t.grid, lineWidth: 1, drawTicks: false, display: isValue },
+        border: { display: !isValue, color: t.axis },
+        ticks,
+        beginAtZero: isValue,
+      };
+    };
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 250 },
+      indexAxis: horizontal ? "y" : "x",
+      interaction: { mode: "index", intersect: false, axis: horizontal ? "y" : "x" },
+      layout: { padding: { top: 4, right: 8 } },
+      scales: {
+        x: scale(xFormat, valueAxis === "x"),
+        y: scale(yFormat, valueAxis === "y"),
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: t.surface, borderColor: t.border, borderWidth: 1,
+          titleColor: t.text2, bodyColor: t.text1, footerColor: t.text2,
+          titleFont: { weight: "normal", size: 12 }, bodyFont: { weight: "600", size: 13 }, footerFont: { weight: "normal", size: 12 },
+          padding: 10, cornerRadius: 8, caretSize: 0,
+          boxWidth: 12, boxHeight: 2, boxPadding: 6,
+          callbacks: {
+            label: tooltipLabel ? (ctx) => tooltipLabel(ctx) : undefined,
+            footer: tooltipAfter ? (items) => tooltipAfter(items) : undefined,
+            labelColor: (ctx) => ({ borderColor: "transparent", backgroundColor: Array.isArray(ctx.dataset.backgroundColor) ? ctx.dataset.backgroundColor[ctx.dataIndex] : ctx.dataset.borderColor || ctx.dataset.backgroundColor }),
+          },
+        },
+      },
+    };
+  }
+
+  const lineDataset = (t, data, label) => ({
+    label, data, borderColor: t.blue, backgroundColor: t.blue, borderWidth: 2,
+    pointRadius: 0, pointHoverRadius: 5, pointHoverBorderWidth: 2, pointHoverBorderColor: css("--surface"),
+    tension: 0, borderJoinStyle: "round", borderCapStyle: "round", spanGaps: false,
+  });
+  const barDataset = (t, data, label, colors) => ({
+    label, data, backgroundColor: colors, hoverBackgroundColor: colors,
+    borderRadius: 4, borderSkipped: "start", maxBarThickness: 24, categoryPercentage: 0.72, barPercentage: 0.9,
+  });
+
+  // ---------- charts ----------
+  // Each builder returns { config, table: { columns, rows } } for the current filters.
+  const builders = {
+    revenue(t) {
+      const by = sumBy(DATA.monthly.filter((r) => inPeriod(r) && inState(r)), "month", ["revenue", "orders"]);
+      const months = [...by.keys()].sort();
+      return {
+        config: {
+          type: "line",
+          data: { labels: months.map(monthLabel), datasets: [lineDataset(t, months.map((m) => by.get(m).revenue), "Revenue")] },
+          options: baseOptions(t, {
+            yFormat: (v) => "R$" + compact.format(v), skipLabels: true,
+            tooltipLabel: (ctx) => " " + brl(ctx.parsed.y) + "  revenue",
+            tooltipAfter: (items) => int.format(by.get(months[items[0].dataIndex]).orders) + " orders",
+          }),
+        },
+        table: { columns: ["Month", "Orders", "Revenue (R$)"], rows: months.map((m) => [m, int.format(by.get(m).orders), int.format(by.get(m).revenue)]) },
+      };
+    },
+
+    late(t) {
+      const by = sumBy(DATA.monthly.filter((r) => inPeriod(r) && inState(r)), "month", ["delivered", "late"]);
+      const months = [...by.keys()].sort().filter((m) => by.get(m).delivered > 0);
+      const rate = (m) => (100 * by.get(m).late) / by.get(m).delivered;
+      return {
+        config: {
+          type: "line",
+          data: { labels: months.map(monthLabel), datasets: [lineDataset(t, months.map(rate), "Late deliveries")] },
+          options: baseOptions(t, {
+            yFormat: (v) => v + "%", skipLabels: true,
+            tooltipLabel: (ctx) => " " + pct(ctx.parsed.y) + "  late",
+            tooltipAfter: (items) => { const r = by.get(months[items[0].dataIndex]); return int.format(r.late) + " of " + int.format(r.delivered) + " delivered orders"; },
+          }),
+        },
+        table: { columns: ["Month", "Delivered", "Late", "Late %"], rows: months.map((m) => [m, int.format(by.get(m).delivered), int.format(by.get(m).late), pct(rate(m))]) },
+      };
+    },
+
+    delay(t) {
+      const by = sumBy(DATA.delay.filter((r) => inPeriod(r) && inState(r)), "bucket", ["orders", "negative", "review_sum"]);
+      const buckets = DELAY_BUCKETS.filter((b) => by.has(b));
+      const neg = (b) => (100 * by.get(b).negative) / by.get(b).orders;
+      const avg = (b) => by.get(b).review_sum / by.get(b).orders;
+      return {
+        config: {
+          type: "bar",
+          data: { labels: buckets, datasets: [barDataset(t, buckets.map(neg), "Negative reviews", buckets.map((b) => (b.includes("late") ? t.blue : t.context)))] },
+          options: baseOptions(t, {
+            yFormat: (v) => v + "%",
+            tooltipLabel: (ctx) => " " + pct(ctx.parsed.y) + "  rated 1–2★",
+            tooltipAfter: (items) => { const b = buckets[items[0].dataIndex]; return "avg " + avg(b).toFixed(2) + "★ · " + int.format(by.get(b).orders) + " orders"; },
+          }),
+        },
+        table: { columns: ["Delivery", "Orders", "Negative %", "Avg review"], rows: buckets.map((b) => [b, int.format(by.get(b).orders), pct(neg(b)), avg(b).toFixed(2)]) },
+      };
+    },
+
+    state(t) {
+      // Compares states, so it ignores the state filter and highlights the selected one instead
+      const rows = DATA.monthly.filter(inPeriod);
+      const by = sumBy(rows, "state", ["delivered", "late", "delivery_days_sum"]);
+      const states = [...by.keys()].filter((s) => by.get(s).delivered >= MIN_STATE_ORDERS);
+      const rate = (s) => (100 * by.get(s).late) / by.get(s).delivered;
+      states.sort((a, b) => rate(b) - rate(a));
+      const total = [...by.values()].reduce((a, r) => ({ delivered: a.delivered + r.delivered, late: a.late + r.late }), { delivered: 0, late: 0 });
+      const national = (100 * total.late) / total.delivered;
+      const highlight = (s) => (filters.state === "ALL" ? rate(s) > 10 : s === filters.state);
+      document.getElementById("state-sub").textContent = filters.state === "ALL"
+        ? "Highlighted: above 10% late · national average " + pct(national) + " · states with 100+ delivered orders"
+        : "Highlighted: " + (STATE_NAMES[filters.state] || filters.state) + " · national average " + pct(national);
+      return {
+        config: {
+          type: "bar",
+          data: { labels: states, datasets: [barDataset(t, states.map(rate), "Late deliveries", states.map((s) => (highlight(s) ? t.blue : t.context)))] },
+          options: baseOptions(t, {
+            horizontal: true,
+            xFormat: (v) => v + "%",
+            tooltipLabel: (ctx) => " " + pct(ctx.parsed.x) + "  late",
+            tooltipAfter: (items) => { const s = states[items[0].dataIndex], r = by.get(s); return (STATE_NAMES[s] || s) + "\n" + int.format(r.delivered) + " delivered · avg " + (r.delivery_days_sum / r.delivered).toFixed(1) + " days"; },
+          }),
+        },
+        table: { columns: ["State", "Delivered", "Late %", "Avg days"], rows: states.map((s) => [s + " – " + (STATE_NAMES[s] || s), int.format(by.get(s).delivered), pct(rate(s)), (by.get(s).delivery_days_sum / by.get(s).delivered).toFixed(1)]) },
+      };
+    },
+
+    categories(t) {
+      const by = sumBy(DATA.categories.filter((r) => inPeriod(r) && inState(r)), "category", ["revenue", "orders"]);
+      const total = [...by.values()].reduce((a, r) => a + r.revenue, 0);
+      const top = [...by.keys()].sort((a, b) => by.get(b).revenue - by.get(a).revenue).slice(0, 10);
+      return {
+        config: {
+          type: "bar",
+          data: { labels: top.map(niceCategory), datasets: [barDataset(t, top.map((c) => by.get(c).revenue), "Revenue", t.blue)] },
+          options: baseOptions(t, {
+            horizontal: true,
+            xFormat: (v) => "R$" + compact.format(v),
+            tooltipLabel: (ctx) => " " + brl(ctx.parsed.x) + "  revenue",
+            tooltipAfter: (items) => { const c = top[items[0].dataIndex]; return pct((100 * by.get(c).revenue) / total) + " of revenue · " + int.format(by.get(c).orders) + " orders"; },
+          }),
+        },
+        table: { columns: ["Category", "Orders", "Revenue (R$)", "Share"], rows: top.map((c) => [niceCategory(c), int.format(by.get(c).orders), int.format(by.get(c).revenue), pct((100 * by.get(c).revenue) / total)]) },
+      };
+    },
+
+    payments(t) {
+      const by = sumBy(DATA.payments.filter((r) => inPeriod(r) && inState(r)), "payment_type", ["orders", "value_sum"]);
+      const total = [...by.values()].reduce((a, r) => a + r.orders, 0);
+      const types = [...by.keys()].sort((a, b) => by.get(b).orders - by.get(a).orders);
+      const share = (p) => (100 * by.get(p).orders) / total;
+      return {
+        config: {
+          type: "bar",
+          data: { labels: types.map((p) => PAYMENT_NAMES[p] || p), datasets: [barDataset(t, types.map(share), "Share of orders", t.blue)] },
+          options: baseOptions(t, {
+            horizontal: true,
+            xFormat: (v) => v + "%",
+            tooltipLabel: (ctx) => " " + pct(ctx.parsed.x) + "  of orders",
+            tooltipAfter: (items) => { const p = types[items[0].dataIndex]; return int.format(by.get(p).orders) + " orders · avg " + brl(by.get(p).value_sum / by.get(p).orders); },
+          }),
+        },
+        table: { columns: ["Method", "Orders", "Share", "Avg value (R$)"], rows: types.map((p) => [PAYMENT_NAMES[p] || p, int.format(by.get(p).orders), pct(share(p)), (by.get(p).value_sum / by.get(p).orders).toFixed(2)]) },
+      };
+    },
+  };
+
+  // ---------- rendering ----------
+  const charts = {};
+
+  function renderTable(box, table) {
+    box.replaceChildren();
+    const el = document.createElement("table");
+    const head = el.createTHead().insertRow();
+    for (const c of table.columns) { const th = document.createElement("th"); th.textContent = c; head.appendChild(th); }
+    const body = el.createTBody();
+    for (const r of table.rows) { const tr = body.insertRow(); for (const v of r) tr.insertCell().textContent = v; }
+    box.appendChild(el);
+  }
+
+  function renderKpis() {
+    const rows = DATA.monthly.filter((r) => inPeriod(r) && inState(r));
+    const s = rows.reduce((a, r) => {
+      for (const f of ["orders", "revenue", "delivered", "late", "delivery_days_sum", "review_sum", "review_n"]) a[f] += r[f];
+      return a;
+    }, { orders: 0, revenue: 0, delivered: 0, late: 0, delivery_days_sum: 0, review_sum: 0, review_n: 0 });
+    const set = (id, v) => { document.getElementById(id).textContent = v; };
+    set("k-revenue", s.orders ? brl(s.revenue) : "–");
+    set("k-orders", s.orders ? compact.format(s.orders) : "–");
+    set("k-aov", s.orders ? brl(s.revenue / s.orders) : "–");
+    set("k-late", s.delivered ? pct((100 * s.late) / s.delivered) : "–");
+    set("k-days", s.delivered ? "of delivered · avg " + (s.delivery_days_sum / s.delivered).toFixed(1) + " days" : "of delivered orders");
+    set("k-review", s.review_n ? (s.review_sum / s.review_n).toFixed(2) + "★" : "–");
+  }
+
+  function renderAll() {
+    const t = tokens();
+    renderKpis();
+    for (const card of document.querySelectorAll("[data-chart]")) {
+      const name = card.dataset.chart;
+      const { config, table } = builders[name](t);
+      const canvas = card.querySelector("canvas");
+      const empty = !table.rows.length;
+      card.querySelector(".chart-box").style.visibility = empty ? "hidden" : "visible";
+      card.querySelector(".chart-box").setAttribute("aria-hidden", String(empty));
+      let msg = card.querySelector(".empty");
+      if (empty && !msg) { msg = document.createElement("div"); msg.className = "empty"; msg.textContent = "No data for this selection."; card.querySelector(".chart-box").before(msg); }
+      if (!empty && msg) msg.remove();
+
+      if (charts[name]) { charts[name].config.data = config.data; charts[name].options = config.options; charts[name].update(); }
+      else { charts[name] = new Chart(canvas, Object.assign(config, { plugins: [crosshair] })); }
+      card._table = table;
+      const box = card.querySelector(".table-box");
+      if (!box.hidden) renderTable(box, table);
+    }
+  }
+
+  // ---------- controls ----------
+  const periodSel = document.getElementById("f-period");
+  const stateSel = document.getElementById("f-state");
+  const present = [...new Set(DATA.monthly.map((r) => r.state))].sort((a, b) => (STATE_NAMES[a] || a).localeCompare(STATE_NAMES[b] || b));
+  for (const s of present) { const o = document.createElement("option"); o.value = s; o.textContent = s + " – " + (STATE_NAMES[s] || s); stateSel.appendChild(o); }
+
+  periodSel.addEventListener("change", () => { filters.period = periodSel.value; renderAll(); });
+  stateSel.addEventListener("change", () => { filters.state = stateSel.value; renderAll(); });
+  document.getElementById("f-reset").addEventListener("click", () => {
+    filters.period = periodSel.value = "all"; filters.state = stateSel.value = "ALL"; renderAll();
+  });
+
+  for (const card of document.querySelectorAll("[data-chart]")) {
+    const btn = card.querySelector(".table-toggle"), box = card.querySelector(".table-box"), chartBox = card.querySelector(".chart-box");
+    btn.addEventListener("click", () => {
+      const show = box.hidden;
+      box.hidden = !show; chartBox.hidden = show;
+      btn.setAttribute("aria-pressed", String(show));
+      btn.textContent = show ? "Chart" : "Table";
+      if (show) renderTable(box, card._table);
+    });
+  }
+
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    for (const k of Object.keys(charts)) { charts[k].destroy(); delete charts[k]; }
+    renderAll();
+  });
+
+  Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", sans-serif';
+  document.getElementById("generated").textContent = RAW.generated;
+  renderAll();
+})();
+</script>
+</body>
+</html>

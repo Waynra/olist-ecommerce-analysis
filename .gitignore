@@ -1,0 +1,8 @@
+# Python
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# Data: download with src/download_data.py, rebuild with src/build_database.py
+data/raw/*.csv
+data/*.db

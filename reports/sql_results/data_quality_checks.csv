@@ -1,0 +1,7 @@
+check_name,value
+orders in analysis window,99092
+orders without items,739
+orders without payment,2
+orders without review,762
+delivered orders without delivery date,8
+orders where payment differs from price+freight by > 1,307
